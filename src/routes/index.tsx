@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Upload, Check, Lock, Play, Pause, RotateCcw } from "lucide-react";
+import { Upload, Check, Lock, Play, Pause, RotateCcw, Loader2, AlertTriangle } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { planMission } from "@/lib/mission-plan.functions";
+import type { MissionPlan } from "@/lib/mission-plan.server";
 import { Badge, Btn, PageHeader, Panel } from "@/components/ui-kit";
 import { pushAudit } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -20,11 +23,8 @@ export const Route = createFileRoute("/")({
 });
 
 const TOOLS = ["Local Ollama", "Gmail", "CRM", "WhatsApp"];
-const WAVES = [
-  { n: 1, agent: "Scout", task: "Read CRM deals & last 30 days of calls", cost: 0.021 },
-  { n: 2, agent: "Scribe", task: "Draft personalised proposals from pricing catalog", cost: 0.064 },
-  { n: 3, agent: "QA", task: "Verify facts against catalog · No-Guessing Gate", cost: 0.032 },
-];
+const DEFAULT_WAVES = [{ n: 1, agent: "Scout" }, { n: 2, agent: "Scribe" }, { n: 3, agent: "QA" }];
+const riskTone = { low: "text-success", medium: "text-warning", high: "text-primary", critical: "text-primary" } as const;
 type Phase = "describe" | "blueprint" | "live" | "done";
 
 function MissionHub() {
@@ -36,24 +36,36 @@ function MissionHub() {
   const [paused, setPaused] = useState(false);
   const [log, setLog] = useState<string[]>([]);
   const logRef = useRef<HTMLDivElement>(null);
+  const [plan, setPlan] = useState<MissionPlan | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const plan$ = useServerFn(planMission);
+
+  const generate = async () => {
+    setLoading(true); setError(null); setPlan(null); setPhase("blueprint");
+    try {
+      const r = await plan$({ data: { goal, connectors: tools } });
+      if (r.error || !r.plan) { setError(r.error ?? "No plan returned."); setPhase("describe"); }
+      else {
+        setPlan(r.plan);
+        pushAudit({ agent: "SHOGUN", action: "mission.blueprint_generated", evidence: "ai_gateway · goal intake", mission: "M-2042", payload: { budget_usd: r.plan.recommendedBudgetUsd, gates: r.plan.approvalCheckpoints.length, missing: r.plan.missingFacts.length } });
+      }
+    } catch { setError("Couldn't reach the planner. Please try again."); setPhase("describe"); }
+    finally { setLoading(false); }
+  };
 
   useEffect(() => {
     if (phase !== "live" || paused) return;
-    const lines = [
-      ["SHOGUN", "mission M-2042 accepted · budget cap $0.15"],
-      ["Scout", "hubspot.deals → 12 stalled records loaded"],
-      ["Scout", "ollama/qwen2.5 · summarised 31 call transcripts"],
-      ["Scribe", "drafting proposals · catalog.pricing_rules#R-14"],
-      ["Scribe", "3 proposals missing contact email → marked _DRAFT"],
-      ["QA", "fact-check 9/9 passed · 0 guesses"],
-      ["BUSHIDO", "external write detected → risk gate opened"],
-    ];
+    const lines: [string, string][] = [["SHOGUN", `mission accepted · budget cap $${plan?.recommendedBudgetUsd.toFixed(2) ?? "0.15"}`]];
+    plan?.waves.forEach((w) => w.tasks.forEach((t) => lines.push([w.agent, t])));
+    plan?.missingFacts.forEach((m) => lines.push(["QA", `missing fact: ${m} → marked _DRAFT`]));
+    plan?.approvalCheckpoints.forEach((c) => lines.push(["BUSHIDO", `${c.actionType} → risk gate opened`]));
     const t = setInterval(() => {
       setLog((l) => {
         if (l.length >= lines.length) {
           clearInterval(t);
           setPhase("done");
-          pushAudit({ agent: "SHOGUN", action: "mission.awaiting_approval", evidence: "wave_3.qa_report", mission: "M-2042", payload: { cost_usd: 0.117 } });
+          pushAudit({ agent: "SHOGUN", action: "mission.awaiting_approval", evidence: "wave_3.qa_report", mission: "M-2042", payload: { cost_usd: plan?.waves.reduce((a, w) => a + w.estimatedCostUsd, 0) ?? 0 } });
           return l;
         }
         const [a, m] = lines[l.length] as [string, string];
@@ -66,8 +78,10 @@ function MissionHub() {
 
   useEffect(() => { logRef.current?.scrollTo({ top: 1e6 }); }, [log]);
 
-  const reset = () => { setPhase("describe"); setLog([]); setWave(0); setPaused(false); };
-  const total = WAVES.reduce((s, w) => s + w.cost, 0);
+  const reset = () => { setPhase("describe"); setLog([]); setWave(0); setPaused(false); setPlan(null); setError(null); };
+  const total = plan?.waves.reduce((s, w) => s + w.estimatedCostUsd, 0) ?? 0;
+  const eta = plan?.waves.reduce((s, w) => s + w.estimatedMinutes, 0) ?? 0;
+  const WAVES = DEFAULT_WAVES;
 
   return (
     <div>
@@ -94,7 +108,8 @@ function MissionHub() {
               );
             })}
           </div>
-          <Btn className="mt-4 w-full" disabled={phase !== "describe" || !goal.trim()} onClick={() => setPhase("blueprint")}>Generate blueprint →</Btn>
+          {error && <div className="mt-3 flex items-start gap-2 rounded-sm border border-primary/50 bg-primary/10 p-2 text-xs"><AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-primary" />{error}</div>}
+          <Btn className="mt-4 w-full" disabled={phase !== "describe" || goal.trim().length < 5 || loading} onClick={generate}>{loading ? <><Loader2 className="size-3.5 animate-spin" />Planning…</> : "Generate AI blueprint →"}</Btn>
         </Panel>
 
         <Panel step="2" title="Mission Blueprint" className={cn(phase === "describe" && "opacity-40")} meta={phase === "blueprint" ? <Badge tone="warning" pulse>Approval needed</Badge> : phase === "describe" ? <Badge>Waiting</Badge> : <Badge tone="success">Approved</Badge>}>
@@ -102,30 +117,41 @@ function MissionHub() {
             <p className="py-10 text-center text-sm text-muted-foreground">Describe a goal to generate the plan.</p>
           ) : (
             <>
+              {loading || !plan ? (
+                <div className="flex flex-col items-center gap-3 py-10 text-center text-sm text-muted-foreground"><Loader2 className="size-5 animate-spin text-primary" />SHOGUN is planning Scout, Scribe and QA waves…</div>
+              ) : (<>
+              <div className="mb-3"><div className="font-semibold">{plan.missionTitle}</div><p className="text-xs text-muted-foreground">{plan.summary}</p></div>
               <ol className="space-y-2">
-                {WAVES.map((w) => (
-                  <li key={w.n} className="flex gap-3 rounded-sm border bg-background p-2.5">
-                    <span className="font-mono text-xs text-primary">W{w.n}</span>
+                {plan.waves.map((w, i) => (
+                  <li key={i} className="flex gap-3 rounded-sm border bg-background p-2.5">
+                    <span className="font-mono text-xs text-primary">W{i + 1}</span>
                     <div className="flex-1">
-                      <div className="text-sm font-medium">{w.agent}</div>
-                      <div className="text-xs text-muted-foreground">{w.task}</div>
+                      <div className="text-sm font-medium">{w.agent} <span className="text-xs font-normal text-muted-foreground">· {w.objective}</span></div>
+                      <ul className="mt-1 list-inside list-disc text-xs text-muted-foreground">{w.tasks.map((t) => <li key={t}>{t}</li>)}</ul>
+                      {w.systems.length > 0 && <div className="mt-1 font-mono text-[10px] text-muted-foreground">{w.systems.join(" · ")}</div>}
                     </div>
-                    <span className="font-mono text-xs text-muted-foreground">${w.cost.toFixed(3)}</span>
+                    <span className="font-mono text-xs text-muted-foreground">${w.estimatedCostUsd.toFixed(3)}</span>
                   </li>
                 ))}
               </ol>
               <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-sm border p-2"><div className="label-mono">Budget</div><div className="font-mono text-sm">${total.toFixed(3)} / $0.15</div></div>
-                <div className="rounded-sm border p-2"><div className="label-mono">ETA</div><div className="font-mono text-sm">~4 min</div></div>
-                <div className="rounded-sm border p-2"><div className="label-mono">Gates</div><div className="font-mono text-sm text-warning">2</div></div>
+                <div className="rounded-sm border p-2"><div className="label-mono">Budget</div><div className="font-mono text-sm">${total.toFixed(3)} / ${plan.recommendedBudgetUsd.toFixed(2)}</div></div>
+                <div className="rounded-sm border p-2"><div className="label-mono">ETA</div><div className="font-mono text-sm">~{Math.round(eta)} min</div></div>
+                <div className="rounded-sm border p-2"><div className="label-mono">Gates</div><div className="font-mono text-sm text-warning">{plan.approvalCheckpoints.length}</div></div>
               </div>
-              <div className="mt-3 space-y-1 text-xs">
-                <div className="flex items-center gap-2 text-muted-foreground"><Lock className="size-3 text-primary" /> send_email · requires human approval</div>
-                <div className="flex items-center gap-2 text-muted-foreground"><Lock className="size-3 text-primary" /> update_crm · requires human approval</div>
+              <p className="mt-2 text-[11px] text-muted-foreground">{plan.budgetRationale}</p>
+              <div className="mt-3 space-y-1.5 text-xs">
+                {plan.approvalCheckpoints.map((c, i) => (
+                  <div key={i} className="flex items-start gap-2"><Lock className={cn("mt-0.5 size-3 shrink-0", riskTone[c.riskLevel])} /><span><b className="font-mono">{c.actionType}</b> <span className={riskTone[c.riskLevel]}>· {c.riskLevel}</span> · after {c.afterAgent} — <span className="text-muted-foreground">{c.reason}</span></span></div>
+                ))}
               </div>
-              <Btn className="mt-4 w-full" disabled={phase !== "blueprint"} onClick={() => { setPhase("live"); pushAudit({ agent: "Human", action: "mission.approved", evidence: "operator:v.vasetsky", mission: "M-2042", payload: { budget_usd: 0.15 } }); }}>
+              {plan.missingFacts.length > 0 && (
+                <div className="mt-3 rounded-sm border border-draft/50 bg-draft/10 p-2 text-xs"><div className="label-mono !text-draft">_DRAFT · missing facts</div><ul className="mt-1 list-inside list-disc">{plan.missingFacts.map((m) => <li key={m}>{m}</li>)}</ul></div>
+              )}
+              <Btn className="mt-4 w-full" disabled={phase !== "blueprint"} onClick={() => { setPhase("live"); pushAudit({ agent: "Human", action: "mission.approved", evidence: "operator:v.vasetsky", mission: "M-2042", payload: { budget_usd: plan.recommendedBudgetUsd } }); }}>
                 <Check className="size-3.5" /> Approve mission
               </Btn>
+              </>)}
             </>
           )}
         </Panel>
@@ -152,7 +178,7 @@ function MissionHub() {
           </div>
           <div className="mt-3 flex gap-2">
             {phase === "live" && <Btn variant="outline" className="flex-1" onClick={() => setPaused(!paused)}>{paused ? <><Play className="size-3.5" />Resume</> : <><Pause className="size-3.5" />Pause</>}</Btn>}
-            {phase === "done" && <Link to="/approvals" className="flex-1"><Btn className="w-full">Review 2 gates in inbox →</Btn></Link>}
+            {phase === "done" && <Link to="/approvals" className="flex-1"><Btn className="w-full">Review gates in inbox →</Btn></Link>}
           </div>
         </Panel>
       </div>
