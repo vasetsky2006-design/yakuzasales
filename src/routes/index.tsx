@@ -1,0 +1,195 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, type FormEvent } from "react";
+import { z } from "zod";
+import { ShieldCheck, Lock, ScrollText, Wallet, PhoneCall, Cpu, ArrowRight, Check, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+
+const TITLE = "YAKUZA Control Tower — Human approval and audit for AI sales agents";
+const DESC = "Let AI agents do the sales and ops work, but nothing reaches a customer or your CRM without sign-off. Approval gates, budget caps and a full audit trail.";
+
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: TITLE },
+      { name: "description", content: DESC },
+      { property: "og:title", content: TITLE },
+      { property: "og:description", content: DESC },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://yakuzasales.lovable.app/" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: "https://yakuzasales.lovable.app/" }],
+  }),
+  component: Landing,
+});
+
+const features = [
+  { icon: Lock, title: "Approval gates", text: "Emails, CRM updates, pricing and payments stop at a risk gate until a manager approves." },
+  { icon: Wallet, title: "Budget caps per mission", text: "Each goal gets a planned cost and a hard limit before any agent starts." },
+  { icon: ScrollText, title: "Full audit trail", text: "Every agent action and human decision is logged with evidence, ready for review." },
+  { icon: ShieldCheck, title: "Guardrails you set", text: "Choose how much each agent can do alone, from read-only to supervised writes." },
+  { icon: PhoneCall, title: "Sales call QA", text: "Score calls against your script and flag deals at risk." },
+  { icon: Cpu, title: "Runs on your own AI", text: "Use a local model so sensitive deal data stays inside your company." },
+];
+
+const steps = [
+  ["Describe the result", "\"Re-engage Q4 deals stalled over 14 days and update CRM stages.\""],
+  ["Approve the plan", "AI drafts research, writing and QA steps with a budget and checkpoints."],
+  ["Sign off risky actions", "Nothing is sent or changed until you approve it in the inbox."],
+];
+
+const schema = z.object({
+  name: z.string().trim().min(1, "Please enter your name").max(100),
+  email: z.string().trim().email("Please enter a valid email").max(255),
+  company: z.string().trim().max(150),
+  role: z.string().trim().max(100),
+  message: z.string().trim().max(1000),
+});
+
+function Landing() {
+  return (
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+          <div className="grid size-8 place-items-center bg-primary font-mono text-sm font-black text-primary-foreground">√</div>
+          <div className="text-sm font-bold tracking-[0.2em]">YAKUZA</div>
+          <nav className="ml-auto flex items-center gap-2 text-sm">
+            <Link to="/hub" className="rounded-sm px-3 py-1.5 text-muted-foreground hover:text-foreground">Try the demo</Link>
+            <a href="#book" className="rounded-sm bg-primary px-3 py-1.5 font-medium text-primary-foreground hover:bg-primary/90">Book a demo</a>
+          </nav>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-6xl px-4 pb-16 pt-16 md:pt-24">
+        <div className="label-mono mb-4">For sales & operations managers</div>
+        <h1 className="max-w-4xl text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+          Let AI agents work your pipeline. <span className="text-primary">Nothing goes out without your sign-off.</span>
+        </h1>
+        <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
+          AI agents that email partners or edit your CRM unsupervised create costly cleanup. YAKUZA Control Tower puts every risky action behind an approval gate, caps spend per mission and keeps a full audit trail.
+        </p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <a href="#book" className="inline-flex items-center gap-2 rounded-sm bg-primary px-5 py-3 font-medium text-primary-foreground hover:bg-primary/90">Book a demo <ArrowRight className="size-4" /></a>
+          <Link to="/hub" className="inline-flex items-center gap-2 rounded-sm border px-5 py-3 font-medium hover:bg-secondary">Open the live demo</Link>
+        </div>
+      </section>
+
+      <section className="border-y bg-panel">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-12 md:grid-cols-3">
+          {steps.map(([t, d], i) => (
+            <div key={t}>
+              <div className="font-mono text-xs text-primary">STEP 0{i + 1}</div>
+              <div className="mt-2 text-lg font-semibold">{t}</div>
+              <p className="mt-1 text-sm text-muted-foreground">{d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <h2 className="text-3xl font-bold tracking-tight">Control, not just automation</h2>
+        <div className="mt-8 grid gap-px overflow-hidden rounded-sm border bg-border sm:grid-cols-2 lg:grid-cols-3">
+          {features.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="bg-card p-6">
+              <Icon className="size-5 text-primary" />
+              <div className="mt-3 font-semibold">{title}</div>
+              <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="book" className="border-t bg-panel">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-2">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">See it on your own pipeline</h2>
+            <p className="mt-3 text-muted-foreground">Book a 30-minute walkthrough, or join the waitlist for early access.</p>
+            <ul className="mt-6 space-y-2 text-sm">
+              {["Map one of your real workflows to a supervised mission", "See where approval gates would sit", "Get early-access pricing"].map((x) => (
+                <li key={x} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-success" />{x}</li>
+              ))}
+            </ul>
+          </div>
+          <RequestForm />
+        </div>
+      </section>
+
+      <footer className="border-t">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-6 text-xs text-muted-foreground">
+          <span>© {new Date().getFullYear()} YAKUZA Control Tower</span>
+          <Link to="/hub" className="ml-auto hover:text-foreground">Live demo →</Link>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function RequestForm() {
+  const [kind, setKind] = useState<"demo" | "waitlist">("demo");
+  const [form, setForm] = useState({ name: "", email: "", company: "", role: "", message: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+
+  const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    const r = schema.safeParse(form);
+    if (!r.success) {
+      setErrors(Object.fromEntries(r.error.issues.map((i) => [String(i.path[0]), i.message])));
+      return;
+    }
+    setErrors({});
+    setStatus("sending");
+    const d = r.data;
+    const { error } = await supabase.from("demo_requests").insert({
+      name: d.name, email: d.email, kind,
+      company: d.company || null, role: d.role || null, message: d.message || null,
+    });
+    setStatus(error ? "error" : "done");
+  };
+
+  if (status === "done") {
+    return (
+      <div className="panel flex flex-col items-start justify-center gap-3 p-8">
+        <Check className="size-6 text-success" />
+        <div className="text-lg font-semibold">{kind === "demo" ? "Thanks — we'll reach out to schedule your demo." : "You're on the waitlist."}</div>
+        <p className="text-sm text-muted-foreground">Meanwhile, explore the live demo.</p>
+        <Link to="/hub" className="mt-2 inline-flex items-center gap-2 rounded-sm border px-4 py-2 text-sm hover:bg-secondary">Open the demo <ArrowRight className="size-4" /></Link>
+      </div>
+    );
+  }
+
+  const input = "w-full rounded-sm border bg-background px-3 py-2 text-sm outline-none focus:border-primary";
+  return (
+    <form onSubmit={submit} className="panel space-y-3 p-6" noValidate>
+      <div className="grid grid-cols-2 gap-1 rounded-sm border p-1">
+        {(["demo", "waitlist"] as const).map((k) => (
+          <button type="button" key={k} onClick={() => setKind(k)}
+            className={cn("rounded-sm py-1.5 text-sm", kind === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
+            {k === "demo" ? "Book a demo" : "Join waitlist"}
+          </button>
+        ))}
+      </div>
+      {([["name", "Name *"], ["email", "Work email *"], ["company", "Company"], ["role", "Your role"]] as const).map(([k, label]) => (
+        <label key={k} className="block">
+          <span className="label-mono">{label}</span>
+          <input type={k === "email" ? "email" : "text"} value={form[k]} onChange={set(k)} maxLength={k === "email" ? 255 : 150} className={cn(input, "mt-1")} />
+          {errors[k] && <span className="mt-1 block text-xs text-primary">{errors[k]}</span>}
+        </label>
+      ))}
+      {kind === "demo" && (
+        <label className="block">
+          <span className="label-mono">What would you like agents to handle?</span>
+          <textarea value={form.message} onChange={set("message")} rows={3} maxLength={1000} className={cn(input, "mt-1 resize-none")} />
+        </label>
+      )}
+      {status === "error" && <p className="text-xs text-primary">Something went wrong. Please try again.</p>}
+      <button type="submit" disabled={status === "sending"} className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-primary px-4 py-2.5 font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+        {status === "sending" && <Loader2 className="size-4 animate-spin" />}
+        {kind === "demo" ? "Request demo" : "Join waitlist"}
+      </button>
+    </form>
+  );
+}

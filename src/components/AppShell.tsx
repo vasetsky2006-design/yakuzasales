@@ -19,6 +19,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pending = useGates().filter((g) => g.status === "pending").length;
   const [open, setOpen] = useState(false);
 
+  if (path === "/") return <>{children}</>;
+
+
   return (
     <div className="flex min-h-screen">
       <aside className={cn("fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r bg-panel transition-transform lg:static lg:translate-x-0", open ? "translate-x-0" : "-translate-x-full")}>
