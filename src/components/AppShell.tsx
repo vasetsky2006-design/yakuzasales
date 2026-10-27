@@ -5,7 +5,7 @@ import { useGates } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { to: "/", label: "Mission Hub", sub: "UX Contract", icon: Target },
+  { to: "/hub", label: "Mission Hub", sub: "UX Contract", icon: Target },
   { to: "/approvals", label: "Approval Inbox", sub: "Risk Gates", icon: Zap, badge: true },
   { to: "/prodavai", label: "ProdaVAI", sub: "Sales QA", icon: PhoneCall },
   { to: "/shinobi", label: "Shinobi", sub: "Doc Parser", icon: FileText },
@@ -32,7 +32,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <nav className="flex-1 space-y-0.5 p-2">
           {nav.map((n) => {
-            const active = n.to === "/" ? path === "/" : path.startsWith(n.to);
+            const active = path.startsWith(n.to);
             const Icon = n.icon;
             return (
               <Link key={n.to} to={n.to} onClick={() => setOpen(false)}

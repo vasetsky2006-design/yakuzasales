@@ -8,7 +8,7 @@ import { Badge, Btn, PageHeader, Panel } from "@/components/ui-kit";
 import { pushAudit } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/hub")({
   head: () => ({
     meta: [
       { title: "Mission Hub — YAKUZA Control Tower" },
