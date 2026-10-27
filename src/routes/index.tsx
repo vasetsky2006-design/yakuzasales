@@ -56,7 +56,7 @@ function MissionHub() {
           pushAudit({ agent: "SHOGUN", action: "mission.awaiting_approval", evidence: "wave_3.qa_report", mission: "M-2042", payload: { cost_usd: 0.117 } });
           return l;
         }
-        const [a, m] = lines[l.length];
+        const [a, m] = lines[l.length]!;
         setWave(a === "Scout" ? 1 : a === "Scribe" ? 2 : a === "SHOGUN" ? 0 : 3);
         return [...l, `${new Date().toLocaleTimeString("en-GB")}  [${a.padEnd(7)}] ${m}`];
       });
