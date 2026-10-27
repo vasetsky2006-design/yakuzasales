@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as BushidoRouteImport } from './routes/bushido'
+import { Route as HubRouteImport } from './routes/hub'
 import { Route as KarmaRouteImport } from './routes/karma'
 import { Route as KatanaRouteImport } from './routes/katana'
 import { Route as ProdavaiRouteImport } from './routes/prodavai'
@@ -30,6 +31,11 @@ const ApprovalsRoute = ApprovalsRouteImport.update({
 const BushidoRoute = BushidoRouteImport.update({
   id: '/bushido',
   path: '/bushido',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HubRoute = HubRouteImport.update({
+  id: '/hub',
+  path: '/hub',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KarmaRoute = KarmaRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/approvals': typeof ApprovalsRoute
   '/bushido': typeof BushidoRoute
+  '/hub': typeof HubRoute
   '/karma': typeof KarmaRoute
   '/katana': typeof KatanaRoute
   '/prodavai': typeof ProdavaiRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/approvals': typeof ApprovalsRoute
   '/bushido': typeof BushidoRoute
+  '/hub': typeof HubRoute
   '/karma': typeof KarmaRoute
   '/katana': typeof KatanaRoute
   '/prodavai': typeof ProdavaiRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/approvals': typeof ApprovalsRoute
   '/bushido': typeof BushidoRoute
+  '/hub': typeof HubRoute
   '/karma': typeof KarmaRoute
   '/katana': typeof KatanaRoute
   '/prodavai': typeof ProdavaiRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/approvals'
     | '/bushido'
+    | '/hub'
     | '/karma'
     | '/katana'
     | '/prodavai'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/approvals'
     | '/bushido'
+    | '/hub'
     | '/karma'
     | '/katana'
     | '/prodavai'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/approvals'
     | '/bushido'
+    | '/hub'
     | '/karma'
     | '/katana'
     | '/prodavai'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApprovalsRoute: typeof ApprovalsRoute
   BushidoRoute: typeof BushidoRoute
+  HubRoute: typeof HubRoute
   KarmaRoute: typeof KarmaRoute
   KatanaRoute: typeof KatanaRoute
   ProdavaiRoute: typeof ProdavaiRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/bushido'
       fullPath: '/bushido'
       preLoaderRoute: typeof BushidoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hub': {
+      id: '/hub'
+      path: '/hub'
+      fullPath: '/hub'
+      preLoaderRoute: typeof HubRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/karma': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApprovalsRoute: ApprovalsRoute,
   BushidoRoute: BushidoRoute,
+  HubRoute: HubRoute,
   KarmaRoute: KarmaRoute,
   KatanaRoute: KatanaRoute,
   ProdavaiRoute: ProdavaiRoute,

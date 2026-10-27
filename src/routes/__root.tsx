@@ -22,7 +22,7 @@ function NotFoundComponent() {
         <h2 className="mt-4 text-xl font-semibold text-foreground">Sector not found</h2>
         <p className="mt-2 text-sm text-muted-foreground">This page doesn't exist or has been moved.</p>
         <div className="mt-6">
-          <Link to="/" className="inline-flex items-center justify-center rounded-sm bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+          <Link to="/hub" className="inline-flex items-center justify-center rounded-sm bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             Back to Mission Hub
           </Link>
         </div>
@@ -67,10 +67,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "YAKUZA AI Control Tower" },
-      { name: "description", content: "Business Operating System & Autonomous Intelligence Layer." },
-      { property: "og:title", content: "YAKUZA AI Control Tower" },
-      { property: "og:description", content: "Business Operating System & Autonomous Intelligence Layer." },
+      { title: "YAKUZA Control Tower — Human approval for AI agents" },
+      { name: "description", content: "Human approval and audit trail for AI agents in sales and operations." },
+      { property: "og:title", content: "YAKUZA Control Tower — Human approval for AI agents" },
+      { property: "og:description", content: "Human approval and audit trail for AI agents in sales and operations." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

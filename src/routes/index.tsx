@@ -1,187 +1,195 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { Upload, Check, Lock, Play, Pause, RotateCcw, Loader2, AlertTriangle } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
-import { planMission } from "@/lib/mission-plan.functions";
-import type { MissionPlan } from "@/lib/mission-plan.server";
-import { Badge, Btn, PageHeader, Panel } from "@/components/ui-kit";
-import { pushAudit } from "@/lib/store";
+import { useState, type FormEvent } from "react";
+import { z } from "zod";
+import { ShieldCheck, Lock, ScrollText, Wallet, PhoneCall, Cpu, ArrowRight, Check, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+
+const TITLE = "YAKUZA Control Tower — Human approval and audit for AI sales agents";
+const DESC = "Let AI agents do the sales and ops work, but nothing reaches a customer or your CRM without sign-off. Approval gates, budget caps and a full audit trail.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Mission Hub — YAKUZA Control Tower" },
-      { name: "description", content: "Describe a result, approve the mission, follow live orchestration." },
-      { property: "og:title", content: "Mission Hub — YAKUZA Control Tower" },
-      { property: "og:description", content: "Describe a result, approve the mission, follow live orchestration." },
+      { title: TITLE },
+      { name: "description", content: DESC },
+      { property: "og:title", content: TITLE },
+      { property: "og:description", content: DESC },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://yakuzasales.lovable.app/" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://yakuzasales.lovable.app/" }],
   }),
-  component: MissionHub,
+  component: Landing,
 });
 
-const TOOLS = ["Local Ollama", "Gmail", "CRM", "WhatsApp"];
-const DEFAULT_WAVES = [{ n: 1, agent: "Scout" }, { n: 2, agent: "Scribe" }, { n: 3, agent: "QA" }];
-const riskTone = { low: "text-success", medium: "text-warning", high: "text-primary", critical: "text-primary" } as const;
-type Phase = "describe" | "blueprint" | "live" | "done";
+const features = [
+  { icon: Lock, title: "Approval gates", text: "Emails, CRM updates, pricing and payments stop at a risk gate until a manager approves." },
+  { icon: Wallet, title: "Budget caps per mission", text: "Each goal gets a planned cost and a hard limit before any agent starts." },
+  { icon: ScrollText, title: "Full audit trail", text: "Every agent action and human decision is logged with evidence, ready for review." },
+  { icon: ShieldCheck, title: "Guardrails you set", text: "Choose how much each agent can do alone, from read-only to supervised writes." },
+  { icon: PhoneCall, title: "Sales call QA", text: "Score calls against your script and flag deals at risk." },
+  { icon: Cpu, title: "Runs on your own AI", text: "Use a local model so sensitive deal data stays inside your company." },
+];
 
-function MissionHub() {
-  const [goal, setGoal] = useState("Re-engage all Q4 deals stalled > 14 days with a tailored proposal and update CRM stages.");
-  const [tools, setTools] = useState<string[]>(["Local Ollama", "CRM", "Gmail"]);
-  const [files, setFiles] = useState<string[]>([]);
-  const [phase, setPhase] = useState<Phase>("describe");
-  const [wave, setWave] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [log, setLog] = useState<string[]>([]);
-  const logRef = useRef<HTMLDivElement>(null);
-  const [plan, setPlan] = useState<MissionPlan | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const plan$ = useServerFn(planMission);
+const steps = [
+  ["Describe the result", "\"Re-engage Q4 deals stalled over 14 days and update CRM stages.\""],
+  ["Approve the plan", "AI drafts research, writing and QA steps with a budget and checkpoints."],
+  ["Sign off risky actions", "Nothing is sent or changed until you approve it in the inbox."],
+];
 
-  const generate = async () => {
-    setLoading(true); setError(null); setPlan(null); setPhase("blueprint");
-    try {
-      const r = await plan$({ data: { goal, connectors: tools } });
-      if (r.error || !r.plan) { setError(r.error ?? "No plan returned."); setPhase("describe"); }
-      else {
-        setPlan(r.plan);
-        pushAudit({ agent: "SHOGUN", action: "mission.blueprint_generated", evidence: "ai_gateway · goal intake", mission: "M-2042", payload: { budget_usd: r.plan.recommendedBudgetUsd, gates: r.plan.approvalCheckpoints.length, missing: r.plan.missingFacts.length } });
-      }
-    } catch { setError("Couldn't reach the planner. Please try again."); setPhase("describe"); }
-    finally { setLoading(false); }
+const schema = z.object({
+  name: z.string().trim().min(1, "Please enter your name").max(100),
+  email: z.string().trim().email("Please enter a valid email").max(255),
+  company: z.string().trim().max(150),
+  role: z.string().trim().max(100),
+  message: z.string().trim().max(1000),
+});
+
+function Landing() {
+  return (
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+          <div className="grid size-8 place-items-center bg-primary font-mono text-sm font-black text-primary-foreground">√</div>
+          <div className="text-sm font-bold tracking-[0.2em]">YAKUZA</div>
+          <nav className="ml-auto flex items-center gap-2 text-sm">
+            <Link to="/hub" className="rounded-sm px-3 py-1.5 text-muted-foreground hover:text-foreground">Try the demo</Link>
+            <a href="#book" className="rounded-sm bg-primary px-3 py-1.5 font-medium text-primary-foreground hover:bg-primary/90">Book a demo</a>
+          </nav>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-6xl px-4 pb-16 pt-16 md:pt-24">
+        <div className="label-mono mb-4">For sales & operations managers</div>
+        <h1 className="max-w-4xl text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl">
+          Let AI agents work your pipeline. <span className="text-primary">Nothing goes out without your sign-off.</span>
+        </h1>
+        <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
+          AI agents that email partners or edit your CRM unsupervised create costly cleanup. YAKUZA Control Tower puts every risky action behind an approval gate, caps spend per mission and keeps a full audit trail.
+        </p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <a href="#book" className="inline-flex items-center gap-2 rounded-sm bg-primary px-5 py-3 font-medium text-primary-foreground hover:bg-primary/90">Book a demo <ArrowRight className="size-4" /></a>
+          <Link to="/hub" className="inline-flex items-center gap-2 rounded-sm border px-5 py-3 font-medium hover:bg-secondary">Open the live demo</Link>
+        </div>
+      </section>
+
+      <section className="border-y bg-panel">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-12 md:grid-cols-3">
+          {steps.map(([t, d], i) => (
+            <div key={t}>
+              <div className="font-mono text-xs text-primary">STEP 0{i + 1}</div>
+              <div className="mt-2 text-lg font-semibold">{t}</div>
+              <p className="mt-1 text-sm text-muted-foreground">{d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <h2 className="text-3xl font-bold tracking-tight">Control, not just automation</h2>
+        <div className="mt-8 grid gap-px overflow-hidden rounded-sm border bg-border sm:grid-cols-2 lg:grid-cols-3">
+          {features.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="bg-card p-6">
+              <Icon className="size-5 text-primary" />
+              <div className="mt-3 font-semibold">{title}</div>
+              <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="book" className="border-t bg-panel">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-2">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">See it on your own pipeline</h2>
+            <p className="mt-3 text-muted-foreground">Book a 30-minute walkthrough, or join the waitlist for early access.</p>
+            <ul className="mt-6 space-y-2 text-sm">
+              {["Map one of your real workflows to a supervised mission", "See where approval gates would sit", "Get early-access pricing"].map((x) => (
+                <li key={x} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-success" />{x}</li>
+              ))}
+            </ul>
+          </div>
+          <RequestForm />
+        </div>
+      </section>
+
+      <footer className="border-t">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-6 text-xs text-muted-foreground">
+          <span>© {new Date().getFullYear()} YAKUZA Control Tower</span>
+          <Link to="/hub" className="ml-auto hover:text-foreground">Live demo →</Link>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function RequestForm() {
+  const [kind, setKind] = useState<"demo" | "waitlist">("demo");
+  const [form, setForm] = useState({ name: "", email: "", company: "", role: "", message: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+
+  const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    const r = schema.safeParse(form);
+    if (!r.success) {
+      setErrors(Object.fromEntries(r.error.issues.map((i) => [String(i.path[0]), i.message])));
+      return;
+    }
+    setErrors({});
+    setStatus("sending");
+    const d = r.data;
+    const { error } = await supabase.from("demo_requests").insert({
+      name: d.name, email: d.email, kind,
+      company: d.company || null, role: d.role || null, message: d.message || null,
+    });
+    setStatus(error ? "error" : "done");
   };
 
-  useEffect(() => {
-    if (phase !== "live" || paused) return;
-    const lines: [string, string][] = [["SHOGUN", `mission accepted · budget cap $${plan?.recommendedBudgetUsd.toFixed(2) ?? "0.15"}`]];
-    plan?.waves.forEach((w) => w.tasks.forEach((t) => lines.push([w.agent, t])));
-    plan?.missingFacts.forEach((m) => lines.push(["QA", `missing fact: ${m} → marked _DRAFT`]));
-    plan?.approvalCheckpoints.forEach((c) => lines.push(["BUSHIDO", `${c.actionType} → risk gate opened`]));
-    const t = setInterval(() => {
-      setLog((l) => {
-        if (l.length >= lines.length) {
-          clearInterval(t);
-          setPhase("done");
-          pushAudit({ agent: "SHOGUN", action: "mission.awaiting_approval", evidence: "wave_3.qa_report", mission: "M-2042", payload: { cost_usd: plan?.waves.reduce((a, w) => a + w.estimatedCostUsd, 0) ?? 0 } });
-          return l;
-        }
-        const [a, m] = lines[l.length] as [string, string];
-        setWave(a === "Scout" ? 1 : a === "Scribe" ? 2 : a === "SHOGUN" ? 0 : 3);
-        return [...l, `${new Date().toLocaleTimeString("en-GB")}  [${a.padEnd(7)}] ${m}`];
-      });
-    }, 900);
-    return () => clearInterval(t);
-  }, [phase, paused]);
-
-  useEffect(() => { logRef.current?.scrollTo({ top: 1e6 }); }, [log]);
-
-  const reset = () => { setPhase("describe"); setLog([]); setWave(0); setPaused(false); setPlan(null); setError(null); };
-  const total = plan?.waves.reduce((s, w) => s + w.estimatedCostUsd, 0) ?? 0;
-  const eta = plan?.waves.reduce((s, w) => s + w.estimatedMinutes, 0) ?? 0;
-  const WAVES = DEFAULT_WAVES;
-
-  return (
-    <div>
-      <PageHeader code="MOD-01 · SHOGUN" title="Mission Hub" desc="Describe the result. Approve the mission. Follow it live." right={phase !== "describe" && <Btn variant="outline" onClick={reset}><RotateCcw className="size-3.5" />New mission</Btn>} />
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        <Panel step="1" title="Describe Goal" meta={phase === "describe" ? <Badge tone="draft" pulse>Editing</Badge> : <Badge tone="success">Locked</Badge>}>
-          <textarea value={goal} onChange={(e) => setGoal(e.target.value)} disabled={phase !== "describe"} rows={5}
-            className="w-full resize-none rounded-sm border bg-background p-3 text-sm outline-none focus:border-primary disabled:opacity-60" placeholder="What result do you want?" />
-          <label className={cn("mt-3 flex cursor-pointer flex-col items-center gap-1 rounded-sm border border-dashed p-4 text-center text-xs text-muted-foreground hover:border-primary hover:text-foreground", phase !== "describe" && "pointer-events-none opacity-50")}>
-            <Upload className="size-4" />
-            {files.length ? files.join(", ") : "Drop files or click to attach"}
-            <input type="file" multiple className="hidden" onChange={(e) => setFiles(Array.from(e.target.files ?? []).map((f) => f.name))} />
-          </label>
-          <div className="label-mono mt-4 mb-2">Connectors</div>
-          <div className="flex flex-wrap gap-1.5">
-            {TOOLS.map((t) => {
-              const on = tools.includes(t);
-              return (
-                <button key={t} disabled={phase !== "describe"} onClick={() => setTools(on ? tools.filter((x) => x !== t) : [...tools, t])}
-                  className={cn("rounded-sm border px-2 py-1 font-mono text-[11px] transition-colors", on ? "border-primary bg-primary/10 text-foreground" : "text-muted-foreground hover:text-foreground")}>
-                  {on ? "● " : "○ "}{t}
-                </button>
-              );
-            })}
-          </div>
-          {error && <div className="mt-3 flex items-start gap-2 rounded-sm border border-primary/50 bg-primary/10 p-2 text-xs"><AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-primary" />{error}</div>}
-          <Btn className="mt-4 w-full" disabled={phase !== "describe" || goal.trim().length < 5 || loading} onClick={generate}>{loading ? <><Loader2 className="size-3.5 animate-spin" />Planning…</> : "Generate AI blueprint →"}</Btn>
-        </Panel>
-
-        <Panel step="2" title="Mission Blueprint" className={cn(phase === "describe" && "opacity-40")} meta={phase === "blueprint" ? <Badge tone="warning" pulse>Approval needed</Badge> : phase === "describe" ? <Badge>Waiting</Badge> : <Badge tone="success">Approved</Badge>}>
-          {phase === "describe" ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">Describe a goal to generate the plan.</p>
-          ) : (
-            <>
-              {loading || !plan ? (
-                <div className="flex flex-col items-center gap-3 py-10 text-center text-sm text-muted-foreground"><Loader2 className="size-5 animate-spin text-primary" />SHOGUN is planning Scout, Scribe and QA waves…</div>
-              ) : (<>
-              <div className="mb-3"><div className="font-semibold">{plan.missionTitle}</div><p className="text-xs text-muted-foreground">{plan.summary}</p></div>
-              <ol className="space-y-2">
-                {plan.waves.map((w, i) => (
-                  <li key={i} className="flex gap-3 rounded-sm border bg-background p-2.5">
-                    <span className="font-mono text-xs text-primary">W{i + 1}</span>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">{w.agent} <span className="text-xs font-normal text-muted-foreground">· {w.objective}</span></div>
-                      <ul className="mt-1 list-inside list-disc text-xs text-muted-foreground">{w.tasks.map((t) => <li key={t}>{t}</li>)}</ul>
-                      {w.systems.length > 0 && <div className="mt-1 font-mono text-[10px] text-muted-foreground">{w.systems.join(" · ")}</div>}
-                    </div>
-                    <span className="font-mono text-xs text-muted-foreground">${w.estimatedCostUsd.toFixed(3)}</span>
-                  </li>
-                ))}
-              </ol>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-sm border p-2"><div className="label-mono">Budget</div><div className="font-mono text-sm">${total.toFixed(3)} / ${plan.recommendedBudgetUsd.toFixed(2)}</div></div>
-                <div className="rounded-sm border p-2"><div className="label-mono">ETA</div><div className="font-mono text-sm">~{Math.round(eta)} min</div></div>
-                <div className="rounded-sm border p-2"><div className="label-mono">Gates</div><div className="font-mono text-sm text-warning">{plan.approvalCheckpoints.length}</div></div>
-              </div>
-              <p className="mt-2 text-[11px] text-muted-foreground">{plan.budgetRationale}</p>
-              <div className="mt-3 space-y-1.5 text-xs">
-                {plan.approvalCheckpoints.map((c, i) => (
-                  <div key={i} className="flex items-start gap-2"><Lock className={cn("mt-0.5 size-3 shrink-0", riskTone[c.riskLevel])} /><span><b className="font-mono">{c.actionType}</b> <span className={riskTone[c.riskLevel]}>· {c.riskLevel}</span> · after {c.afterAgent} — <span className="text-muted-foreground">{c.reason}</span></span></div>
-                ))}
-              </div>
-              {plan.missingFacts.length > 0 && (
-                <div className="mt-3 rounded-sm border border-draft/50 bg-draft/10 p-2 text-xs"><div className="label-mono !text-draft">_DRAFT · missing facts</div><ul className="mt-1 list-inside list-disc">{plan.missingFacts.map((m) => <li key={m}>{m}</li>)}</ul></div>
-              )}
-              <Btn className="mt-4 w-full" disabled={phase !== "blueprint"} onClick={() => { setPhase("live"); pushAudit({ agent: "Human", action: "mission.approved", evidence: "operator:v.vasetsky", mission: "M-2042", payload: { budget_usd: plan.recommendedBudgetUsd } }); }}>
-                <Check className="size-3.5" /> Approve mission
-              </Btn>
-              </>)}
-            </>
-          )}
-        </Panel>
-
-        <Panel step="3" title="Live Mission Feed" className={cn((phase === "describe" || phase === "blueprint") && "opacity-40")}
-          meta={phase === "live" ? (paused ? <Badge tone="warning" pulse={false}>Safely paused</Badge> : <Badge tone="primary" pulse>In progress</Badge>) : phase === "done" ? <Badge tone="warning" pulse>Approval needed</Badge> : <Badge>Idle</Badge>}>
-          <div className="mb-3 flex items-center gap-1">
-            {WAVES.map((w, i) => {
-              const state = phase === "done" || wave > w.n ? "done" : wave === w.n && phase === "live" ? "run" : "wait";
-              return (
-                <div key={w.n} className="flex flex-1 items-center gap-1">
-                  <div className={cn("flex-1 rounded-sm border px-2 py-1.5 text-center", state === "run" && "glow-primary", state === "done" && "border-success/50")}>
-                    <div className="label-mono">Wave {w.n}</div>
-                    <div className={cn("text-xs font-semibold", state === "done" && "text-success", state === "run" && "text-primary")}>{w.agent}</div>
-                  </div>
-                  {i < 2 && <span className="text-muted-foreground">→</span>}
-                </div>
-              );
-            })}
-          </div>
-          <div ref={logRef} className="h-56 overflow-y-auto rounded-sm border bg-background p-3 font-mono text-[11px] leading-relaxed">
-            {log.length === 0 ? <span className="text-muted-foreground">&gt; awaiting mission approval_</span> :
-              log.map((l, i) => <div key={i} className={cn(l.includes("_DRAFT") && "text-draft", l.includes("risk gate") && "text-primary", l.includes("passed") && "text-success")}>{l}</div>)}
-          </div>
-          <div className="mt-3 flex gap-2">
-            {phase === "live" && <Btn variant="outline" className="flex-1" onClick={() => setPaused(!paused)}>{paused ? <><Play className="size-3.5" />Resume</> : <><Pause className="size-3.5" />Pause</>}</Btn>}
-            {phase === "done" && <Link to="/approvals" className="flex-1"><Btn className="w-full">Review gates in inbox →</Btn></Link>}
-          </div>
-        </Panel>
+  if (status === "done") {
+    return (
+      <div className="panel flex flex-col items-start justify-center gap-3 p-8">
+        <Check className="size-6 text-success" />
+        <div className="text-lg font-semibold">{kind === "demo" ? "Thanks — we'll reach out to schedule your demo." : "You're on the waitlist."}</div>
+        <p className="text-sm text-muted-foreground">Meanwhile, explore the live demo.</p>
+        <Link to="/hub" className="mt-2 inline-flex items-center gap-2 rounded-sm border px-4 py-2 text-sm hover:bg-secondary">Open the demo <ArrowRight className="size-4" /></Link>
       </div>
-    </div>
+    );
+  }
+
+  const input = "w-full rounded-sm border bg-background px-3 py-2 text-sm outline-none focus:border-primary";
+  return (
+    <form onSubmit={submit} className="panel space-y-3 p-6" noValidate>
+      <div className="grid grid-cols-2 gap-1 rounded-sm border p-1">
+        {(["demo", "waitlist"] as const).map((k) => (
+          <button type="button" key={k} onClick={() => setKind(k)}
+            className={cn("rounded-sm py-1.5 text-sm", kind === k ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
+            {k === "demo" ? "Book a demo" : "Join waitlist"}
+          </button>
+        ))}
+      </div>
+      {([["name", "Name *"], ["email", "Work email *"], ["company", "Company"], ["role", "Your role"]] as const).map(([k, label]) => (
+        <label key={k} className="block">
+          <span className="label-mono">{label}</span>
+          <input type={k === "email" ? "email" : "text"} value={form[k]} onChange={set(k)} maxLength={k === "email" ? 255 : 150} className={cn(input, "mt-1")} />
+          {errors[k] && <span className="mt-1 block text-xs text-primary">{errors[k]}</span>}
+        </label>
+      ))}
+      {kind === "demo" && (
+        <label className="block">
+          <span className="label-mono">What would you like agents to handle?</span>
+          <textarea value={form.message} onChange={set("message")} rows={3} maxLength={1000} className={cn(input, "mt-1 resize-none")} />
+        </label>
+      )}
+      {status === "error" && <p className="text-xs text-primary">Something went wrong. Please try again.</p>}
+      <button type="submit" disabled={status === "sending"} className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-primary px-4 py-2.5 font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+        {status === "sending" && <Loader2 className="size-4 animate-spin" />}
+        {kind === "demo" ? "Request demo" : "Join waitlist"}
+      </button>
+    </form>
   );
 }
