@@ -69,7 +69,7 @@ export async function generateMissionPlan(goal: string, connectors: string[], si
     system: INSTRUCTIONS,
     prompt: `Goal: ${goal}\nEnabled connectors: ${connectors.length ? connectors.join(", ") : "none"}`,
     output: Output.object({ schema: planSchema }),
-    abortSignal: signal,
+    ...(signal ? { abortSignal: signal } : {}),
     maxRetries: 0,
     onError: ({ error }) => {
       failure = error;
