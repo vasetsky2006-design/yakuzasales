@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApprovalsRouteImport } from './routes/approvals'
+import { Route as BushidoRouteImport } from './routes/bushido'
+import { Route as KarmaRouteImport } from './routes/karma'
+import { Route as KatanaRouteImport } from './routes/katana'
+import { Route as ProdavaiRouteImport } from './routes/prodavai'
+import { Route as ShinobiRouteImport } from './routes/shinobi'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApprovalsRoute = ApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BushidoRoute = BushidoRouteImport.update({
+  id: '/bushido',
+  path: '/bushido',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KarmaRoute = KarmaRouteImport.update({
+  id: '/karma',
+  path: '/karma',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KatanaRoute = KatanaRouteImport.update({
+  id: '/katana',
+  path: '/katana',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProdavaiRoute = ProdavaiRouteImport.update({
+  id: '/prodavai',
+  path: '/prodavai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShinobiRoute = ShinobiRouteImport.update({
+  id: '/shinobi',
+  path: '/shinobi',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/approvals': typeof ApprovalsRoute
+  '/bushido': typeof BushidoRoute
+  '/karma': typeof KarmaRoute
+  '/katana': typeof KatanaRoute
+  '/prodavai': typeof ProdavaiRoute
+  '/shinobi': typeof ShinobiRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/approvals': typeof ApprovalsRoute
+  '/bushido': typeof BushidoRoute
+  '/karma': typeof KarmaRoute
+  '/katana': typeof KatanaRoute
+  '/prodavai': typeof ProdavaiRoute
+  '/shinobi': typeof ShinobiRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/approvals': typeof ApprovalsRoute
+  '/bushido': typeof BushidoRoute
+  '/karma': typeof KarmaRoute
+  '/katana': typeof KatanaRoute
+  '/prodavai': typeof ProdavaiRoute
+  '/shinobi': typeof ShinobiRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/approvals'
+    | '/bushido'
+    | '/karma'
+    | '/katana'
+    | '/prodavai'
+    | '/shinobi'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/approvals'
+    | '/bushido'
+    | '/karma'
+    | '/katana'
+    | '/prodavai'
+    | '/shinobi'
+  id:
+    | '__root__'
+    | '/'
+    | '/approvals'
+    | '/bushido'
+    | '/karma'
+    | '/katana'
+    | '/prodavai'
+    | '/shinobi'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApprovalsRoute: typeof ApprovalsRoute
+  BushidoRoute: typeof BushidoRoute
+  KarmaRoute: typeof KarmaRoute
+  KatanaRoute: typeof KatanaRoute
+  ProdavaiRoute: typeof ProdavaiRoute
+  ShinobiRoute: typeof ShinobiRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +130,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/approvals': {
+      id: '/approvals'
+      path: '/approvals'
+      fullPath: '/approvals'
+      preLoaderRoute: typeof ApprovalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bushido': {
+      id: '/bushido'
+      path: '/bushido'
+      fullPath: '/bushido'
+      preLoaderRoute: typeof BushidoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/karma': {
+      id: '/karma'
+      path: '/karma'
+      fullPath: '/karma'
+      preLoaderRoute: typeof KarmaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/katana': {
+      id: '/katana'
+      path: '/katana'
+      fullPath: '/katana'
+      preLoaderRoute: typeof KatanaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prodavai': {
+      id: '/prodavai'
+      path: '/prodavai'
+      fullPath: '/prodavai'
+      preLoaderRoute: typeof ProdavaiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shinobi': {
+      id: '/shinobi'
+      path: '/shinobi'
+      fullPath: '/shinobi'
+      preLoaderRoute: typeof ShinobiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApprovalsRoute: ApprovalsRoute,
+  BushidoRoute: BushidoRoute,
+  KarmaRoute: KarmaRoute,
+  KatanaRoute: KatanaRoute,
+  ProdavaiRoute: ProdavaiRoute,
+  ShinobiRoute: ShinobiRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

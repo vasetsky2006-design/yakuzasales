@@ -56,11 +56,12 @@ export function PageHeader({ code, title, desc, right }: { code: string; title: 
   );
 }
 
+const statTone: Record<Tone, string> = { primary: "text-primary", success: "text-success", warning: "text-warning", draft: "text-draft", muted: "" };
 export function Stat({ label, value, tone }: { label: string; value: string; tone?: Tone }) {
   return (
     <div className="panel px-4 py-3">
       <div className="label-mono">{label}</div>
-      <div className={cn("mt-1 font-mono text-xl font-semibold", tone && tone !== "muted" && `text-${tone}`)}>{value}</div>
+      <div className={cn("mt-1 font-mono text-xl font-semibold", tone && statTone[tone])}>{value}</div>
     </div>
   );
 }
