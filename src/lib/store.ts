@@ -6,7 +6,9 @@ export type GateStatus = "pending" | "approved" | "rejected";
 export interface Gate {
   id: string;
   title: string;
+  titleUk?: string;
   mission: string;
+  missionUk?: string;
   agent: string;
   risk: Risk;
   target: string;
@@ -23,6 +25,7 @@ export interface AuditEntry {
   action: string;
   evidence: string;
   mission: string;
+  missionUk?: string;
   payload: Record<string, unknown>;
 }
 
@@ -30,7 +33,8 @@ let gates: Gate[] = [
   {
     id: "G-7741",
     title: "Send revised quote to Kovalenko Logistics",
-    mission: "M-2041 · Q4 renewal push",
+    titleUk: "Надіслати оновлену пропозицію Kovalenko Logistics",
+    mission: "M-2041 · Q4 renewal push", missionUk: "M-2041 · Поновлення Q4",
     agent: "ProdaVAI",
     risk: "high",
     target: "Client Email · Gmail",
@@ -47,7 +51,8 @@ let gates: Gate[] = [
   {
     id: "G-7742",
     title: "Update deal stage in CRM",
-    mission: "M-2041 · Q4 renewal push",
+    titleUk: "Оновити етап угоди в CRM",
+    mission: "M-2041 · Q4 renewal push", missionUk: "M-2041 · Поновлення Q4",
     agent: "SHOGUN",
     risk: "medium",
     target: "CRM Update · HubSpot",
@@ -63,7 +68,8 @@ let gates: Gate[] = [
   {
     id: "G-7743",
     title: "Execute supplier payout · Invoice INV-3390",
-    mission: "M-2038 · AP reconciliation",
+    titleUk: "Виплата постачальнику · Рахунок INV-3390",
+    mission: "M-2038 · AP reconciliation", missionUk: "M-2038 · Звірка кредиторки",
     agent: "Shinobi",
     risk: "critical",
     target: "Payout · Bank API",
@@ -79,7 +85,8 @@ let gates: Gate[] = [
   {
     id: "G-7744",
     title: "Publish LinkedIn post · Product launch",
-    mission: "M-2040 · Launch campaign",
+    titleUk: "Опублікувати пост у LinkedIn · Запуск продукту",
+    mission: "M-2040 · Launch campaign", missionUk: "M-2040 · Кампанія запуску",
     agent: "KATANA",
     risk: "low",
     target: "Social · LinkedIn",

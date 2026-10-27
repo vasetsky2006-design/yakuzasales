@@ -7,6 +7,8 @@ import type { MissionPlan } from "@/lib/mission-plan.server";
 import { Badge, Btn, PageHeader, Panel } from "@/components/ui-kit";
 import { pushAudit } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { useT, useLang } from "@/lib/i18n";
+
 
 export const Route = createFileRoute("/hub")({
   head: () => ({
@@ -28,6 +30,8 @@ const riskTone = { low: "text-success", medium: "text-warning", high: "text-prim
 type Phase = "describe" | "blueprint" | "live" | "done";
 
 function MissionHub() {
+  const t = useT();
+  const lang = useLang();
   const [goal, setGoal] = useState("Re-engage all Q4 deals stalled > 14 days with a tailored proposal and update CRM stages.");
   const [tools, setTools] = useState<string[]>(["Local Ollama", "CRM", "Gmail"]);
   const [files, setFiles] = useState<string[]>([]);
@@ -44,13 +48,13 @@ function MissionHub() {
   const generate = async () => {
     setLoading(true); setError(null); setPlan(null); setPhase("blueprint");
     try {
-      const r = await plan$({ data: { goal, connectors: tools } });
-      if (r.error || !r.plan) { setError(r.error ?? "No plan returned."); setPhase("describe"); }
+      const r = await plan$({ data: { goal, connectors: tools, lang } });
+      if (r.error || !r.plan) { setError(r.error ?? t("No plan returned.", "План не отримано.")); setPhase("describe"); }
       else {
         setPlan(r.plan);
         pushAudit({ agent: "SHOGUN", action: "mission.blueprint_generated", evidence: "ai_gateway · goal intake", mission: "M-2042", payload: { budget_usd: r.plan.recommendedBudgetUsd, gates: r.plan.approvalCheckpoints.length, missing: r.plan.missingFacts.length } });
       }
-    } catch { setError("Couldn't reach the planner. Please try again."); setPhase("describe"); }
+    } catch { setError(t("Couldn't reach the planner. Please try again.", "Не вдалося зв'язатися з планувальником. Спробуйте ще раз.")); setPhase("describe"); }
     finally { setLoading(false); }
   };
 
@@ -85,40 +89,40 @@ function MissionHub() {
 
   return (
     <div>
-      <PageHeader code="MOD-01 · SHOGUN" title="Mission Hub" desc="Describe the result. Approve the mission. Follow it live." right={phase !== "describe" && <Btn variant="outline" onClick={reset}><RotateCcw className="size-3.5" />New mission</Btn>} />
+      <PageHeader code="MOD-01 · SHOGUN" title={t("Mission Hub", "Центр місій")} desc={t("Describe the result. Approve the mission. Follow it live.", "Опишіть результат. Погодьте місію. Стежте наживо.")} right={phase !== "describe" && <Btn variant="outline" onClick={reset}><RotateCcw className="size-3.5" />{t("New mission", "Нова місія")}</Btn>} />
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Panel step="1" title="Describe Goal" meta={phase === "describe" ? <Badge tone="draft" pulse>Editing</Badge> : <Badge tone="success">Locked</Badge>}>
+        <Panel step="1" title={t("Describe Goal", "Опишіть ціль")} meta={phase === "describe" ? <Badge tone="draft" pulse>{t("Editing", "Редагування")}</Badge> : <Badge tone="success">{t("Locked", "Зафіксовано")}</Badge>}>
           <textarea value={goal} onChange={(e) => setGoal(e.target.value)} disabled={phase !== "describe"} rows={5}
-            className="w-full resize-none rounded-sm border bg-background p-3 text-sm outline-none focus:border-primary disabled:opacity-60" placeholder="What result do you want?" />
+            className="w-full resize-none rounded-sm border bg-background p-3 text-sm outline-none focus:border-primary disabled:opacity-60" placeholder={t("What result do you want?", "Який результат вам потрібен?")} />
           <label className={cn("mt-3 flex cursor-pointer flex-col items-center gap-1 rounded-sm border border-dashed p-4 text-center text-xs text-muted-foreground hover:border-primary hover:text-foreground", phase !== "describe" && "pointer-events-none opacity-50")}>
             <Upload className="size-4" />
-            {files.length ? files.join(", ") : "Drop files or click to attach"}
+            {files.length ? files.join(", ") : t("Drop files or click to attach", "Перетягніть файли або натисніть, щоб додати")}
             <input type="file" multiple className="hidden" onChange={(e) => setFiles(Array.from(e.target.files ?? []).map((f) => f.name))} />
           </label>
-          <div className="label-mono mt-4 mb-2">Connectors</div>
+          <div className="label-mono mt-4 mb-2">{t("Connectors", "Інтеграції")}</div>
           <div className="flex flex-wrap gap-1.5">
-            {TOOLS.map((t) => {
-              const on = tools.includes(t);
+            {TOOLS.map((tool) => {
+              const on = tools.includes(tool);
               return (
-                <button key={t} disabled={phase !== "describe"} onClick={() => setTools(on ? tools.filter((x) => x !== t) : [...tools, t])}
+                <button key={tool} disabled={phase !== "describe"} onClick={() => setTools(on ? tools.filter((x) => x !== tool) : [...tools, tool])}
                   className={cn("rounded-sm border px-2 py-1 font-mono text-[11px] transition-colors", on ? "border-primary bg-primary/10 text-foreground" : "text-muted-foreground hover:text-foreground")}>
-                  {on ? "● " : "○ "}{t}
+                  {on ? "● " : "○ "}{tool}
                 </button>
               );
             })}
           </div>
           {error && <div className="mt-3 flex items-start gap-2 rounded-sm border border-primary/50 bg-primary/10 p-2 text-xs"><AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-primary" />{error}</div>}
-          <Btn className="mt-4 w-full" disabled={phase !== "describe" || goal.trim().length < 5 || loading} onClick={generate}>{loading ? <><Loader2 className="size-3.5 animate-spin" />Planning…</> : "Generate AI blueprint →"}</Btn>
+          <Btn className="mt-4 w-full" disabled={phase !== "describe" || goal.trim().length < 5 || loading} onClick={generate}>{loading ? <><Loader2 className="size-3.5 animate-spin" />{t("Planning…", "Планування…")}</> : t("Generate AI blueprint →", "Згенерувати план ШІ →")}</Btn>
         </Panel>
 
-        <Panel step="2" title="Mission Blueprint" className={cn(phase === "describe" && "opacity-40")} meta={phase === "blueprint" ? <Badge tone="warning" pulse>Approval needed</Badge> : phase === "describe" ? <Badge>Waiting</Badge> : <Badge tone="success">Approved</Badge>}>
+        <Panel step="2" title={t("Mission Blueprint", "План місії")} className={cn(phase === "describe" && "opacity-40")} meta={phase === "blueprint" ? <Badge tone="warning" pulse>{t("Approval needed", "Потрібне погодження")}</Badge> : phase === "describe" ? <Badge>{t("Waiting", "Очікування")}</Badge> : <Badge tone="success">{t("Approved", "Погоджено")}</Badge>}>
           {phase === "describe" ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">Describe a goal to generate the plan.</p>
+            <p className="py-10 text-center text-sm text-muted-foreground">{t("Describe a goal to generate the plan.", "Опишіть ціль, щоб згенерувати план.")}</p>
           ) : (
             <>
               {loading || !plan ? (
-                <div className="flex flex-col items-center gap-3 py-10 text-center text-sm text-muted-foreground"><Loader2 className="size-5 animate-spin text-primary" />SHOGUN is planning Scout, Scribe and QA waves…</div>
+                <div className="flex flex-col items-center gap-3 py-10 text-center text-sm text-muted-foreground"><Loader2 className="size-5 animate-spin text-primary" />{t("SHOGUN is planning Scout, Scribe and QA waves…", "SHOGUN планує хвилі Scout, Scribe і QA…")}</div>
               ) : (<>
               <div className="mb-3"><div className="font-semibold">{plan.missionTitle}</div><p className="text-xs text-muted-foreground">{plan.summary}</p></div>
               <ol className="space-y-2">
@@ -127,7 +131,7 @@ function MissionHub() {
                     <span className="font-mono text-xs text-primary">W{i + 1}</span>
                     <div className="flex-1">
                       <div className="text-sm font-medium">{w.agent} <span className="text-xs font-normal text-muted-foreground">· {w.objective}</span></div>
-                      <ul className="mt-1 list-inside list-disc text-xs text-muted-foreground">{w.tasks.map((t) => <li key={t}>{t}</li>)}</ul>
+                      <ul className="mt-1 list-inside list-disc text-xs text-muted-foreground">{w.tasks.map((x) => <li key={x}>{x}</li>)}</ul>
                       {w.systems.length > 0 && <div className="mt-1 font-mono text-[10px] text-muted-foreground">{w.systems.join(" · ")}</div>}
                     </div>
                     <span className="font-mono text-xs text-muted-foreground">${w.estimatedCostUsd.toFixed(3)}</span>
@@ -135,36 +139,36 @@ function MissionHub() {
                 ))}
               </ol>
               <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-sm border p-2"><div className="label-mono">Budget</div><div className="font-mono text-sm">${total.toFixed(3)} / ${plan.recommendedBudgetUsd.toFixed(2)}</div></div>
-                <div className="rounded-sm border p-2"><div className="label-mono">ETA</div><div className="font-mono text-sm">~{Math.round(eta)} min</div></div>
-                <div className="rounded-sm border p-2"><div className="label-mono">Gates</div><div className="font-mono text-sm text-warning">{plan.approvalCheckpoints.length}</div></div>
+                <div className="rounded-sm border p-2"><div className="label-mono">{t("Budget", "Бюджет")}</div><div className="font-mono text-sm">${total.toFixed(3)} / ${plan.recommendedBudgetUsd.toFixed(2)}</div></div>
+                <div className="rounded-sm border p-2"><div className="label-mono">{t("ETA", "Час")}</div><div className="font-mono text-sm">~{Math.round(eta)} {t("min", "хв")}</div></div>
+                <div className="rounded-sm border p-2"><div className="label-mono">{t("Gates", "Шлюзи")}</div><div className="font-mono text-sm text-warning">{plan.approvalCheckpoints.length}</div></div>
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground">{plan.budgetRationale}</p>
               <div className="mt-3 space-y-1.5 text-xs">
                 {plan.approvalCheckpoints.map((c, i) => (
-                  <div key={i} className="flex items-start gap-2"><Lock className={cn("mt-0.5 size-3 shrink-0", riskTone[c.riskLevel])} /><span><b className="font-mono">{c.actionType}</b> <span className={riskTone[c.riskLevel]}>· {c.riskLevel}</span> · after {c.afterAgent} — <span className="text-muted-foreground">{c.reason}</span></span></div>
+                  <div key={i} className="flex items-start gap-2"><Lock className={cn("mt-0.5 size-3 shrink-0", riskTone[c.riskLevel])} /><span><b className="font-mono">{c.actionType}</b> <span className={riskTone[c.riskLevel]}>· {t(c.riskLevel, ({ low: "низький", medium: "середній", high: "високий", critical: "критичний" } as const)[c.riskLevel])}</span> · {t("after", "після")} {c.afterAgent} — <span className="text-muted-foreground">{c.reason}</span></span></div>
                 ))}
               </div>
               {plan.missingFacts.length > 0 && (
-                <div className="mt-3 rounded-sm border border-draft/50 bg-draft/10 p-2 text-xs"><div className="label-mono !text-draft">_DRAFT · missing facts</div><ul className="mt-1 list-inside list-disc">{plan.missingFacts.map((m) => <li key={m}>{m}</li>)}</ul></div>
+                <div className="mt-3 rounded-sm border border-draft/50 bg-draft/10 p-2 text-xs"><div className="label-mono !text-draft">_DRAFT · {t("missing facts", "бракує фактів")}</div><ul className="mt-1 list-inside list-disc">{plan.missingFacts.map((m) => <li key={m}>{m}</li>)}</ul></div>
               )}
               <Btn className="mt-4 w-full" disabled={phase !== "blueprint"} onClick={() => { setPhase("live"); pushAudit({ agent: "Human", action: "mission.approved", evidence: "operator:v.vasetsky", mission: "M-2042", payload: { budget_usd: plan.recommendedBudgetUsd } }); }}>
-                <Check className="size-3.5" /> Approve mission
+                <Check className="size-3.5" /> {t("Approve mission", "Погодити місію")}
               </Btn>
               </>)}
             </>
           )}
         </Panel>
 
-        <Panel step="3" title="Live Mission Feed" className={cn((phase === "describe" || phase === "blueprint") && "opacity-40")}
-          meta={phase === "live" ? (paused ? <Badge tone="warning" pulse={false}>Safely paused</Badge> : <Badge tone="primary" pulse>In progress</Badge>) : phase === "done" ? <Badge tone="warning" pulse>Approval needed</Badge> : <Badge>Idle</Badge>}>
+        <Panel step="3" title={t("Live Mission Feed", "Хід місії наживо")} className={cn((phase === "describe" || phase === "blueprint") && "opacity-40")}
+          meta={phase === "live" ? (paused ? <Badge tone="warning" pulse={false}>{t("Safely paused", "Безпечно призупинено")}</Badge> : <Badge tone="primary" pulse>{t("In progress", "Виконується")}</Badge>) : phase === "done" ? <Badge tone="warning" pulse>{t("Approval needed", "Потрібне погодження")}</Badge> : <Badge>{t("Idle", "Очікує")}</Badge>}>
           <div className="mb-3 flex items-center gap-1">
             {WAVES.map((w, i) => {
               const state = phase === "done" || wave > w.n ? "done" : wave === w.n && phase === "live" ? "run" : "wait";
               return (
                 <div key={w.n} className="flex flex-1 items-center gap-1">
                   <div className={cn("flex-1 rounded-sm border px-2 py-1.5 text-center", state === "run" && "glow-primary", state === "done" && "border-success/50")}>
-                    <div className="label-mono">Wave {w.n}</div>
+                    <div className="label-mono">{t("Wave", "Хвиля")} {w.n}</div>
                     <div className={cn("text-xs font-semibold", state === "done" && "text-success", state === "run" && "text-primary")}>{w.agent}</div>
                   </div>
                   {i < 2 && <span className="text-muted-foreground">→</span>}
@@ -173,12 +177,12 @@ function MissionHub() {
             })}
           </div>
           <div ref={logRef} className="h-56 overflow-y-auto rounded-sm border bg-background p-3 font-mono text-[11px] leading-relaxed">
-            {log.length === 0 ? <span className="text-muted-foreground">&gt; awaiting mission approval_</span> :
+            {log.length === 0 ? <span className="text-muted-foreground">&gt; {t("awaiting mission approval_", "очікує погодження місії_")}</span> :
               log.map((l, i) => <div key={i} className={cn(l.includes("_DRAFT") && "text-draft", l.includes("risk gate") && "text-primary", l.includes("passed") && "text-success")}>{l}</div>)}
           </div>
           <div className="mt-3 flex gap-2">
-            {phase === "live" && <Btn variant="outline" className="flex-1" onClick={() => setPaused(!paused)}>{paused ? <><Play className="size-3.5" />Resume</> : <><Pause className="size-3.5" />Pause</>}</Btn>}
-            {phase === "done" && <Link to="/approvals" className="flex-1"><Btn className="w-full">Review gates in inbox →</Btn></Link>}
+            {phase === "live" && <Btn variant="outline" className="flex-1" onClick={() => setPaused(!paused)}>{paused ? <><Play className="size-3.5" />{t("Resume", "Продовжити")}</> : <><Pause className="size-3.5" />{t("Pause", "Пауза")}</>}</Btn>}
+            {phase === "done" && <Link to="/approvals" className="flex-1"><Btn className="w-full">{t("Review gates in inbox →", "Переглянути шлюзи →")}</Btn></Link>}
           </div>
         </Panel>
       </div>

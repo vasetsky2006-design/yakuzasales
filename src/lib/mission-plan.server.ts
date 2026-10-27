@@ -52,7 +52,7 @@ Rules:
 - Add an approval checkpoint for EVERY action that changes an external system (send_email, update_crm, execute_payout, publish_post, send_message, etc.). Payments are always critical. Read-only work needs no checkpoint.
 - No-Guessing rule: never invent facts. List any information the goal lacks (recipients, amounts, dates, criteria) in missingFacts; use an empty array if none.`;
 
-export async function generateMissionPlan(goal: string, connectors: string[], signal?: AbortSignal) {
+export async function generateMissionPlan(goal: string, connectors: string[], signal?: AbortSignal, lang: "en" | "uk" = "en") {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("AI is not configured for this app.");
 
@@ -66,7 +66,7 @@ export async function generateMissionPlan(goal: string, connectors: string[], si
   let failure: unknown;
   const result = streamText({
     model: provider.responses("openai/gpt-6-astra"),
-    system: INSTRUCTIONS,
+    system: INSTRUCTIONS + (lang === "uk" ? "\n- Write ALL human-readable text (missionTitle, summary, objective, tasks, budgetRationale, reason, missingFacts) in Ukrainian. Keep agent names, actionType identifiers, systems and riskLevel values in English as defined by the schema." : ""),
     prompt: `Goal: ${goal}\nEnabled connectors: ${connectors.length ? connectors.join(", ") : "none"}`,
     output: Output.object({ schema: planSchema }),
     ...(signal ? { abortSignal: signal } : {}),
