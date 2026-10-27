@@ -60,10 +60,12 @@ function MissionHub() {
 
   useEffect(() => {
     if (phase !== "live" || paused) return;
-    const lines: [string, string][] = [["SHOGUN", `mission accepted · budget cap $${plan?.recommendedBudgetUsd.toFixed(2) ?? "0.15"}`]];
+    const uk = lang === "uk";
+    const budget = plan?.recommendedBudgetUsd.toFixed(2) ?? "0.15";
+    const lines: [string, string][] = [["SHOGUN", uk ? `місію прийнято · ліміт бюджету $${budget}` : `mission accepted · budget cap $${budget}`]];
     plan?.waves.forEach((w) => w.tasks.forEach((t) => lines.push([w.agent, t])));
-    plan?.missingFacts.forEach((m) => lines.push(["QA", `missing fact: ${m} → marked _DRAFT`]));
-    plan?.approvalCheckpoints.forEach((c) => lines.push(["BUSHIDO", `${c.actionType} → risk gate opened`]));
+    plan?.missingFacts.forEach((m) => lines.push(["QA", uk ? `бракує факту: ${m} → позначено _DRAFT` : `missing fact: ${m} → marked _DRAFT`]));
+    plan?.approvalCheckpoints.forEach((c) => lines.push(["BUSHIDO", uk ? `${c.actionType} → відкрито шлюз ризику` : `${c.actionType} → risk gate opened`]));
     const t = setInterval(() => {
       setLog((l) => {
         if (l.length >= lines.length) {
@@ -178,7 +180,7 @@ function MissionHub() {
           </div>
           <div ref={logRef} className="h-56 overflow-y-auto rounded-sm border bg-background p-3 font-mono text-[11px] leading-relaxed">
             {log.length === 0 ? <span className="text-muted-foreground">&gt; {t("awaiting mission approval_", "очікує погодження місії_")}</span> :
-              log.map((l, i) => <div key={i} className={cn(l.includes("_DRAFT") && "text-draft", l.includes("risk gate") && "text-primary", l.includes("passed") && "text-success")}>{l}</div>)}
+              log.map((l, i) => <div key={i} className={cn(l.includes("_DRAFT") && "text-draft", (l.includes("risk gate") || l.includes("шлюз ризику")) && "text-primary", (l.includes("passed") || l.includes("пройдено")) && "text-success")}>{l}</div>)}
           </div>
           <div className="mt-3 flex gap-2">
             {phase === "live" && <Btn variant="outline" className="flex-1" onClick={() => setPaused(!paused)}>{paused ? <><Play className="size-3.5" />{t("Resume", "Продовжити")}</> : <><Pause className="size-3.5" />{t("Pause", "Пауза")}</>}</Btn>}
