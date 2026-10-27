@@ -3,6 +3,8 @@ import { useState, type ReactNode } from "react";
 import { Target, Zap, PhoneCall, FileText, Palette, Shield, ScrollText, Menu, X, Cpu, Wallet, Building2 } from "lucide-react";
 import { useGates } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
+import { LangToggle } from "@/components/LangToggle";
 
 const nav = [
   { to: "/hub", label: "Mission Hub", uk: "Центр місій", sub: "UX Contract", subUk: "UX-контракт", icon: Target },

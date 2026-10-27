@@ -109,7 +109,7 @@ function Landing() {
       <section className="mx-auto max-w-6xl px-4 py-16">
         <h2 className="text-3xl font-bold tracking-tight">{t("Control, not just automation", "Контроль, а не лише автоматизація")}</h2>
         <div className="mt-8 grid gap-px overflow-hidden rounded-sm border bg-border sm:grid-cols-2 lg:grid-cols-3">
-          {features.map(({ icon: Icon, ...f }, i) => { const [title, text] = t([f.title, f.text], featuresUk[i]); return (
+          {features.map(({ icon: Icon, ...f }, i) => { const [title, text] = t([f.title, f.text], featuresUk[i] ?? [f.title, f.text]); return (
             <div key={i} className="bg-card p-6">
               <Icon className="size-5 text-primary" />
               <div className="mt-3 font-semibold">{title}</div>
