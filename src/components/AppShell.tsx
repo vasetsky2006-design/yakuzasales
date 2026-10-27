@@ -5,16 +5,17 @@ import { useGates } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { to: "/hub", label: "Mission Hub", sub: "UX Contract", icon: Target },
-  { to: "/approvals", label: "Approval Inbox", sub: "Risk Gates", icon: Zap, badge: true },
-  { to: "/prodavai", label: "ProdaVAI", sub: "Sales QA", icon: PhoneCall },
-  { to: "/shinobi", label: "Shinobi", sub: "Doc Parser", icon: FileText },
-  { to: "/katana", label: "KATANA", sub: "Content Studio", icon: Palette },
-  { to: "/bushido", label: "BUSHIDO", sub: "Guardrails", icon: Shield },
-  { to: "/karma", label: "KARMA", sub: "Audit Trail", icon: ScrollText },
+  { to: "/hub", label: "Mission Hub", uk: "Центр місій", sub: "UX Contract", subUk: "UX-контракт", icon: Target },
+  { to: "/approvals", label: "Approval Inbox", uk: "Погодження", sub: "Risk Gates", subUk: "Шлюзи ризику", icon: Zap, badge: true },
+  { to: "/prodavai", label: "ProdaVAI", uk: "ProdaVAI", sub: "Sales QA", subUk: "Контроль продажів", icon: PhoneCall },
+  { to: "/shinobi", label: "Shinobi", uk: "Shinobi", sub: "Doc Parser", subUk: "Розбір документів", icon: FileText },
+  { to: "/katana", label: "KATANA", uk: "KATANA", sub: "Content Studio", subUk: "Контент-студія", icon: Palette },
+  { to: "/bushido", label: "BUSHIDO", uk: "BUSHIDO", sub: "Guardrails", subUk: "Обмеження", icon: Shield },
+  { to: "/karma", label: "KARMA", uk: "KARMA", sub: "Audit Trail", subUk: "Журнал аудиту", icon: ScrollText },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const t = useT();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const pending = useGates().filter((g) => g.status === "pending").length;
   const [open, setOpen] = useState(false);
