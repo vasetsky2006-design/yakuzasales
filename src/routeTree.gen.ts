@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as BushidoRouteImport } from './routes/bushido'
 import { Route as HubRouteImport } from './routes/hub'
@@ -17,6 +18,11 @@ import { Route as KatanaRouteImport } from './routes/katana'
 import { Route as ProdavaiRouteImport } from './routes/prodavai'
 import { Route as ShinobiRouteImport } from './routes/shinobi'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApprovalsRoute = ApprovalsRouteImport.update({
   id: '/approvals',
   path: '/approvals',
@@ -54,6 +60,7 @@ const ShinobiRoute = ShinobiRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/approvals': typeof ApprovalsRoute
   '/bushido': typeof BushidoRoute
   '/hub': typeof HubRoute
@@ -63,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/shinobi': typeof ShinobiRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/approvals': typeof ApprovalsRoute
   '/bushido': typeof BushidoRoute
   '/hub': typeof HubRoute
@@ -73,6 +81,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/approvals': typeof ApprovalsRoute
   '/bushido': typeof BushidoRoute
   '/hub': typeof HubRoute
@@ -84,6 +93,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/approvals'
     | '/bushido'
     | '/hub'
@@ -93,6 +103,7 @@ export interface FileRouteTypes {
     | '/shinobi'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/approvals'
     | '/bushido'
     | '/hub'
@@ -102,6 +113,7 @@ export interface FileRouteTypes {
     | '/shinobi'
   id:
     | '__root__'
+    | '/'
     | '/approvals'
     | '/bushido'
     | '/hub'
@@ -112,6 +124,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   ApprovalsRoute: typeof ApprovalsRoute
   BushidoRoute: typeof BushidoRoute
   HubRoute: typeof HubRoute
@@ -123,6 +136,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/approvals': {
       id: '/approvals'
       path: '/approvals'
@@ -176,6 +196,7 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   ApprovalsRoute: ApprovalsRoute,
   BushidoRoute: BushidoRoute,
   HubRoute: HubRoute,
