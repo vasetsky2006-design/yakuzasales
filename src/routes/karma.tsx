@@ -4,6 +4,8 @@ import { Search, Lock } from "lucide-react";
 import { Badge, PageHeader } from "@/components/ui-kit";
 import { useAudit } from "@/lib/store";
 import { useT } from "@/lib/i18n";
+import { useWebMCP } from "use-webmcp-tool";
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
 
 
 export const Route = createFileRoute("/karma")({
@@ -26,6 +28,15 @@ function Karma() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
   const rows = audit.filter((a) => JSON.stringify(a).toLowerCase().includes(q.toLowerCase()));
+
+  useWebMCP({
+    name: "read_audit_view",
+    description: "Read up to twenty audit entries matching the current screen search; does not change the search or records.",
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    execute: () => runWebMCPTool("read_audit_view", () => rows.length
+      ? `${rows.length} matching entries.\n${rows.slice(0, 20).map((r) => `${r.id}: ${r.ts} | ${r.agent} | ${r.action} | ${r.mission} | ${r.evidence}`).join("\n")}`
+      : "No matching entries in the current view."),
+  });
 
   return (
     <div>

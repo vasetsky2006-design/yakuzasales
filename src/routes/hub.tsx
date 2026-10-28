@@ -8,6 +8,8 @@ import { Badge, Btn, PageHeader, Panel } from "@/components/ui-kit";
 import { pushAudit } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { useT, useLang } from "@/lib/i18n";
+import { useWebMCP } from "use-webmcp-tool";
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
 
 
 export const Route = createFileRoute("/hub")({
@@ -88,6 +90,17 @@ function MissionHub() {
   const total = plan?.waves.reduce((s, w) => s + w.estimatedCostUsd, 0) ?? 0;
   const eta = plan?.waves.reduce((s, w) => s + w.estimatedMinutes, 0) ?? 0;
   const WAVES = DEFAULT_WAVES;
+
+  useWebMCP({
+    name: "read_mission_view",
+    description: "Read the current Mission Hub goal, blueprint summary and latest visible progress without starting or approving work.",
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    execute: () => runWebMCPTool("read_mission_view", () => loading
+      ? "Mission blueprint is loading."
+      : [`Phase: ${phase}${paused ? " (paused)" : ""}`, `Goal: ${goal}`, error ? `Error: ${error}` : "",
+        plan ? `Blueprint: ${plan.missionTitle}\n${plan.summary}\nRecommended budget: $${plan.recommendedBudgetUsd.toFixed(2)}\n${plan.waves.map((w) => `${w.agent}: ${w.objective}`).join("\n")}\nApproval checkpoints: ${plan.approvalCheckpoints.length}\nMissing facts: ${plan.missingFacts.join("; ") || "none"}` : "No blueprint generated.",
+        ...log.slice(-5)].filter(Boolean).join("\n")),
+  });
 
   return (
     <div>

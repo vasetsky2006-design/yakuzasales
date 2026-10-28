@@ -5,6 +5,8 @@ import { Badge, Btn, PageHeader, Stat } from "@/components/ui-kit";
 import { decideGate, useGates, type Risk } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
+import { useWebMCP } from "use-webmcp-tool";
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
 
 
 export const Route = createFileRoute("/approvals")({
@@ -30,6 +32,15 @@ function Approvals() {
   const [filter, setFilter] = useState<"pending" | "all">("pending");
   const list = filter === "pending" ? gates.filter((g) => g.status === "pending") : gates;
   const count = (s: string) => gates.filter((g) => g.status === s).length;
+
+  useWebMCP({
+    name: "read_approval_view",
+    description: "Read the approval gates in the current filtered inbox; does not approve, reject or execute actions.",
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    execute: () => runWebMCPTool("read_approval_view", () => list.length
+      ? list.map((g) => `${g.id}: ${t(g.title, g.titleUk ?? g.title)} | ${g.status} | ${g.risk} | ${g.action} | ${g.diff.some((d) => d.proposed === null) ? "missing facts; approval locked" : "facts supplied"}`).join("\n")
+      : "No gates in the current view."),
+  });
 
   return (
     <div>
