@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "sdk_version": "3.3.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "yakuzasales",
+      "version": "0.1.0",
+      "title": "Yakuzasales"
+    },
+    "tools": [
+      {
+        "name": "list_modules",
+        "title": "List YAKUZA modules",
+        "description": "List the intentionally public YAKUZA demo modules, paths and purposes; does not read operational records.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_workflow_overview",
+        "title": "Get YAKUZA workflow overview",
+        "description": "Explain the public mission workflow and current demo limitations without accessing mission or lead records.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

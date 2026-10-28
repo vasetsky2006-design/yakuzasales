@@ -15,8 +15,10 @@ import { Route as BushidoRouteImport } from './routes/bushido'
 import { Route as HubRouteImport } from './routes/hub'
 import { Route as KarmaRouteImport } from './routes/karma'
 import { Route as KatanaRouteImport } from './routes/katana'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as ProdavaiRouteImport } from './routes/prodavai'
 import { Route as ShinobiRouteImport } from './routes/shinobi'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -48,6 +50,11 @@ const KatanaRoute = KatanaRouteImport.update({
   path: '/katana',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProdavaiRoute = ProdavaiRouteImport.update({
   id: '/prodavai',
   path: '/prodavai',
@@ -58,6 +65,12 @@ const ShinobiRoute = ShinobiRouteImport.update({
   path: '/shinobi',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,8 +79,10 @@ export interface FileRoutesByFullPath {
   '/hub': typeof HubRoute
   '/karma': typeof KarmaRoute
   '/katana': typeof KatanaRoute
+  '/mcp': typeof McpRoute
   '/prodavai': typeof ProdavaiRoute
   '/shinobi': typeof ShinobiRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -76,8 +91,10 @@ export interface FileRoutesByTo {
   '/hub': typeof HubRoute
   '/karma': typeof KarmaRoute
   '/katana': typeof KatanaRoute
+  '/mcp': typeof McpRoute
   '/prodavai': typeof ProdavaiRoute
   '/shinobi': typeof ShinobiRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -87,8 +104,10 @@ export interface FileRoutesById {
   '/hub': typeof HubRoute
   '/karma': typeof KarmaRoute
   '/katana': typeof KatanaRoute
+  '/mcp': typeof McpRoute
   '/prodavai': typeof ProdavaiRoute
   '/shinobi': typeof ShinobiRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -99,8 +118,10 @@ export interface FileRouteTypes {
     | '/hub'
     | '/karma'
     | '/katana'
+    | '/mcp'
     | '/prodavai'
     | '/shinobi'
+    | '/.well-known/oauth-protected-resource'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -109,8 +130,10 @@ export interface FileRouteTypes {
     | '/hub'
     | '/karma'
     | '/katana'
+    | '/mcp'
     | '/prodavai'
     | '/shinobi'
+    | '/.well-known/oauth-protected-resource'
   id:
     | '__root__'
     | '/'
@@ -119,8 +142,10 @@ export interface FileRouteTypes {
     | '/hub'
     | '/karma'
     | '/katana'
+    | '/mcp'
     | '/prodavai'
     | '/shinobi'
+    | '/.well-known/oauth-protected-resource'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -130,8 +155,10 @@ export interface RootRouteChildren {
   HubRoute: typeof HubRoute
   KarmaRoute: typeof KarmaRoute
   KatanaRoute: typeof KatanaRoute
+  McpRoute: typeof McpRoute
   ProdavaiRoute: typeof ProdavaiRoute
   ShinobiRoute: typeof ShinobiRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -178,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KatanaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/prodavai': {
       id: '/prodavai'
       path: '/prodavai'
@@ -192,6 +226,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShinobiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -202,8 +243,11 @@ const rootRouteChildren: RootRouteChildren = {
   HubRoute: HubRoute,
   KarmaRoute: KarmaRoute,
   KatanaRoute: KatanaRoute,
+  McpRoute: McpRoute,
   ProdavaiRoute: ProdavaiRoute,
   ShinobiRoute: ShinobiRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
